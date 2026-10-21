@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#01030a">
+<title>NEON DROP</title>
+<meta name="apple-mobile-web-app-title" content="NEON DROP">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="scanlines" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+
+<div class="stage">
+
+  <!-- ---------- 左サイド：HOLD とステータス ---------- -->
+  <aside class="side side-left">
+    <section class="panel hold-panel">
+      <h2 class="panel-title">HOLD</h2>
+      <canvas id="hold" width="120" height="90"></canvas>
+    </section>
+
+    <section class="panel stats">
+      <div class="stat">
+        <span class="stat-label">SCORE</span>
+        <span class="stat-value" id="score">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">BEST</span>
+        <span class="stat-value dim" id="best">0</span>
+      </div>
+      <div class="stat split">
+        <div>
+          <span class="stat-label">LEVEL</span>
+          <span class="stat-value" id="level">1</span>
+        </div>
+        <div>
+          <span class="stat-label">LINES</span>
+          <span class="stat-value" id="lines">0</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel keys">
+      <h2 class="panel-title">KEYS</h2>
+      <dl class="keylist">
+        <dt>&#8592; &#8594;</dt><dd>移動</dd>
+        <dt>&#8595;</dt><dd>ソフトドロップ</dd>
+        <dt>SPACE</dt><dd>ハードドロップ</dd>
+        <dt>&#8593; / X</dt><dd>右回転</dd>
+        <dt>Z</dt><dd>左回転</dd>
+        <dt>A</dt><dd>180&deg;回転</dd>
+        <dt>C / SHIFT</dt><dd>ホールド</dd>
+        <dt>P</dt><dd>ポーズ</dd>
+        <dt>R</dt><dd>リスタート</dd>
+        <dt>M</dt><dd>ミュート</dd>
+      </dl>
+    </section>
+  </aside>
+
+  <!-- ---------- 中央：盤面 ---------- -->
+  <main class="board-area">
+    <h1 class="wordmark">NEON<span>DROP</span></h1>
+
+    <div class="board-frame">
+      <canvas id="board" width="300" height="600"></canvas>
+
+      <!-- 状態オーバーレイ -->
+      <div class="overlay" id="overlay" hidden>
+        <div class="overlay-inner">
+          <p class="overlay-kicker" id="ovKicker">READY</p>
+          <h2 class="overlay-title" id="ovTitle">NEON DROP</h2>
+          <p class="overlay-body" id="ovBody">SPACE キーでスタート</p>
+          <p class="overlay-hint" id="ovHint">&#8592;&#8594; 移動 / &#8593; 回転 / SPACE ハードドロップ</p>
+          <button type="button" class="overlay-btn" id="ovRestart" hidden>RESTART</button>
+        </div>
+      </div>
+
+      <!-- ライン消去時のアクション名表示 -->
+      <div class="callout" id="callout" aria-live="polite"></div>
+    </div>
+
+    <p class="mute-flag" id="muteFlag" hidden>&#9209; MUTED</p>
+  </main>
+
+  <!-- ---------- 右サイド：NEXT ---------- -->
+  <aside class="side side-right">
+    <section class="panel next-panel">
+      <h2 class="panel-title">NEXT</h2>
+      <canvas id="next" width="120" height="380"></canvas>
+    </section>
+
+    <!-- タッチ端末のみ：ポーズとミュート -->
+    <div class="util" aria-label="システム">
+      <button type="button" class="util-btn" data-key="KeyP" aria-label="ポーズ">&#10073;&#10073;</button>
+      <button type="button" class="util-btn" data-key="KeyM" aria-label="ミュート" id="muteBtn">&#9834;</button>
+    </div>
+  </aside>
+
+</div>
+
+<!-- ---------- タッチ端末用の操作ボタン ---------- -->
+<div class="pad" aria-label="操作ボタン">
+  <div class="pad-cluster pad-left">
+    <button type="button" class="pad-btn wide small" data-key="KeyC">HOLD</button>
+    <button type="button" class="pad-btn" data-key="ArrowLeft" aria-label="左へ移動">&#9664;</button>
+    <button type="button" class="pad-btn" data-key="ArrowDown" aria-label="ソフトドロップ">&#9660;</button>
+    <button type="button" class="pad-btn" data-key="ArrowRight" aria-label="右へ移動">&#9654;</button>
+  </div>
+  <div class="pad-cluster pad-right">
+    <button type="button" class="pad-btn" data-key="KeyZ" aria-label="左回転">&#8634;</button>
+    <button type="button" class="pad-btn" data-key="KeyX" aria-label="右回転">&#8635;</button>
+    <button type="button" class="pad-btn wide accent" data-key="Space">DROP</button>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/board.js"></script>
+<script src="js/piece.js"></script>
+<script src="js/input.js"></script>
+<script src="js/render.js"></script>
+<script src="js/game.js"></script>
+<script>
+/* オフライン対応：Service Worker を登録（https か localhost のときだけ動く） */
+if("serviceWorker" in navigator && location.protocol !== "file:"){
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
